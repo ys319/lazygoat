@@ -13,6 +13,9 @@ const LF = "\n";
 const UTF8_DECODER = new TextDecoder("utf-8", { fatal: false });
 const TEXT_ENCODER = new TextEncoder();
 
+/** Maximum number of MIME parts to prevent DoS from malicious inputs. */
+const MAX_MIME_PARTS = 10_000;
+
 /**
  * Represents a single MIME part with lazy evaluation.
  *
@@ -181,8 +184,12 @@ export function splitMultipartBody(
   body: Uint8Array,
   boundary: string,
 ): MimePart[] {
+  // Sanitize boundary: strip control characters that would break line-based parsing
+  const cleanBoundary = boundary.replace(/[\r\n]/g, "");
+  if (cleanBoundary.length === 0) return [];
+
   const text = UTF8_DECODER.decode(body);
-  const delimiter = "--" + boundary;
+  const delimiter = "--" + cleanBoundary;
   const closeDelimiter = delimiter + "--";
 
   const parts: MimePart[] = [];
@@ -215,6 +222,9 @@ export function splitMultipartBody(
     const partContent = text.slice(searchFrom, endIdx);
     const part = parsePartContent(partContent);
     if (part) parts.push(part);
+
+    // Enforce part count limit to prevent DoS
+    if (parts.length >= MAX_MIME_PARTS) break;
 
     // Check for close delimiter
     if (text.slice(nextBoundaryIdx, nextBoundaryIdx + closeDelimiter.length) === closeDelimiter) {
@@ -296,13 +306,18 @@ function parsePartContent(content: string): MimePart | null {
 
 /**
  * Extract a parameter value from a structured header value.
+ * Supports both plain parameters and RFC 2231 encoded parameters (name*=charset'lang'value).
  * e.g., extractParam('attachment; filename="test.pdf"', 'filename') => 'test.pdf'
  */
 function extractParam(headerValue: string, paramName: string): string | null {
   const lower = headerValue.toLowerCase();
   const target = paramName.toLowerCase();
 
-  // Find the parameter
+  // Try RFC 2231 encoded parameter first (name*=charset'lang'encoded_value)
+  const rfc2231Result = extractRfc2231Param(headerValue, lower, target);
+  if (rfc2231Result !== null) return rfc2231Result;
+
+  // Find the plain parameter
   let idx = 0;
   while (idx < lower.length) {
     const paramIdx = lower.indexOf(target, idx);
@@ -317,14 +332,19 @@ function extractParam(headerValue: string, paramName: string): string | null {
       }
     }
 
-    // Find '=' after param name
+    // Make sure the next non-whitespace char after name is '=' (not '*=')
     let eqIdx = paramIdx + target.length;
     while (eqIdx < headerValue.length && (headerValue[eqIdx] === " " || headerValue[eqIdx] === "\t")) {
       eqIdx++;
     }
 
     if (eqIdx >= headerValue.length || headerValue[eqIdx] !== "=") {
-      idx = paramIdx + 1;
+      idx = eqIdx + 1;
+      continue;
+    }
+    // Skip if this is actually a RFC 2231 param (name*=)
+    if (headerValue[paramIdx + target.length] === "*") {
+      idx = eqIdx + 1;
       continue;
     }
 
@@ -357,4 +377,90 @@ function extractParam(headerValue: string, paramName: string): string | null {
   }
 
   return null;
+}
+
+/**
+ * Extract an RFC 2231 encoded parameter (name*=charset'language'encoded_value).
+ */
+function extractRfc2231Param(
+  headerValue: string,
+  lower: string,
+  target: string,
+): string | null {
+  const starTarget = target + "*";
+  let idx = 0;
+  while (idx < lower.length) {
+    const paramIdx = lower.indexOf(starTarget, idx);
+    if (paramIdx < 0) return null;
+
+    // Check it's preceded by ';' or whitespace
+    if (paramIdx > 0) {
+      const prev = lower[paramIdx - 1];
+      if (prev !== ";" && prev !== " " && prev !== "\t") {
+        idx = paramIdx + 1;
+        continue;
+      }
+    }
+
+    // Find '=' after "name*"
+    let eqIdx = paramIdx + starTarget.length;
+    while (eqIdx < headerValue.length && (headerValue[eqIdx] === " " || headerValue[eqIdx] === "\t")) {
+      eqIdx++;
+    }
+
+    if (eqIdx >= headerValue.length || headerValue[eqIdx] !== "=") {
+      idx = eqIdx + 1;
+      continue;
+    }
+
+    // Extract raw value
+    let valIdx = eqIdx + 1;
+    while (valIdx < headerValue.length && (headerValue[valIdx] === " " || headerValue[valIdx] === "\t")) {
+      valIdx++;
+    }
+
+    let rawValue: string;
+    if (valIdx < headerValue.length && headerValue[valIdx] === '"') {
+      const endQuote = headerValue.indexOf('"', valIdx + 1);
+      rawValue = endQuote >= 0
+        ? headerValue.slice(valIdx + 1, endQuote)
+        : headerValue.slice(valIdx + 1);
+    } else {
+      let endIdx = valIdx;
+      while (endIdx < headerValue.length && headerValue[endIdx] !== ";" && headerValue[endIdx] !== " " && headerValue[endIdx] !== "\t") {
+        endIdx++;
+      }
+      rawValue = headerValue.slice(valIdx, endIdx);
+    }
+
+    // Decode: charset'language'percent-encoded-value
+    const firstApos = rawValue.indexOf("'");
+    if (firstApos < 0) return rawValue;
+    const charset = rawValue.slice(0, firstApos);
+    const secondApos = rawValue.indexOf("'", firstApos + 1);
+    if (secondApos < 0) return rawValue;
+    const encoded = rawValue.slice(secondApos + 1);
+
+    return decodeRfc2231Percent(encoded, charset);
+  }
+  return null;
+}
+
+/**
+ * Decode RFC 2231 percent-encoded value with charset.
+ */
+function decodeRfc2231Percent(encoded: string, charset: string): string {
+  const bytes: number[] = [];
+  for (let i = 0; i < encoded.length; i++) {
+    if (encoded[i] === "%" && i + 2 < encoded.length) {
+      const val = parseInt(encoded.slice(i + 1, i + 3), 16);
+      if (!isNaN(val)) {
+        bytes.push(val);
+        i += 2;
+        continue;
+      }
+    }
+    bytes.push(encoded.charCodeAt(i));
+  }
+  return decodeCharset(new Uint8Array(bytes), charset || "utf-8");
 }

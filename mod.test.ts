@@ -1,5 +1,5 @@
 import { assertEquals, assertExists } from "@std/assert";
-import { parse } from "./mod.ts";
+import { parse, parseEager } from "./mod.ts";
 import { MimePart } from "./src/part.ts";
 
 // ── Helper ──
@@ -421,4 +421,84 @@ Deno.test("edge case - unclosed quote with semicolon after", () => {
   const body = new TextEncoder().encode("data");
   const part = new MimePart(headers, body);
   assertEquals(part.filename, "broken");
+});
+
+// ── parseEager ──
+
+Deno.test("parseEager - simple text email", async () => {
+  const raw = await loadEml("basic/simple_text.eml");
+  const msg = parseEager(raw);
+  assertEquals(msg.subject, "Simple plain text");
+  assertEquals(msg.from.length, 1);
+  assertEquals(msg.from[0].address, "sender@example.com");
+  assertEquals(msg.to.length, 1);
+  assertExists(msg.text);
+  assertEquals(msg.html, null);
+  assertEquals(msg.attachments.length, 0);
+  assertEquals(msg.messageId, "simple@example.com");
+  assertExists(msg.date);
+  assertEquals(msg.mimeVersion, "1.0");
+  // Headers should be available as array
+  assertEquals(msg.headers.length > 0, true);
+  // Root part should be resolved
+  assertEquals(msg.rootPart.contentType.type, "text");
+  assertEquals(msg.rootPart.contentType.subtype, "plain");
+  assertEquals(msg.parts.length, 1);
+});
+
+Deno.test("parseEager - multipart email structure", async () => {
+  const raw = await loadEml("multipart/mixed.eml");
+  const msg = parseEager(raw);
+  assertEquals(msg.subject, "Email with attachment");
+  assertEquals(msg.contentType.type, "multipart");
+  // Root part should have children
+  assertEquals(msg.rootPart.isMultipart, true);
+  assertEquals(msg.rootPart.parts.length > 0, true);
+  // Leaf parts should be flattened
+  assertEquals(msg.parts.length, 3);
+  // Attachments resolved
+  assertEquals(msg.attachments.length, 1);
+  assertEquals(msg.attachments[0].filename, "report.pdf");
+});
+
+Deno.test("parseEager - nested multipart with full tree", async () => {
+  const raw = await loadEml("multipart/nested.eml");
+  const msg = parseEager(raw);
+  assertExists(msg.text);
+  assertExists(msg.html);
+  assertEquals(msg.attachments.length, 1);
+  assertEquals(msg.inlineAttachments.length, 1);
+  assertEquals(msg.parts.length, 4);
+  // Verify tree structure is fully resolved
+  assertEquals(msg.rootPart.isMultipart, true);
+  for (const part of msg.parts) {
+    assertEquals(part.isMultipart, false);
+    assertExists(part.contentType.type);
+    assertExists(part.headers);
+  }
+});
+
+Deno.test("parseEager - RFC 2231 filename* in Content-Disposition", () => {
+  const raw = [
+    "From: test@example.com",
+    "To: to@example.com",
+    "Subject: RFC 2231 test",
+    "MIME-Version: 1.0",
+    'Content-Type: multipart/mixed; boundary="b1"',
+    "",
+    "--b1",
+    "Content-Type: text/plain",
+    "",
+    "body",
+    "--b1",
+    "Content-Type: application/octet-stream",
+    "Content-Disposition: attachment; filename*=UTF-8''%E3%83%86%E3%82%B9%E3%83%88.txt",
+    "Content-Transfer-Encoding: base64",
+    "",
+    "AAAA",
+    "--b1--",
+  ].join("\r\n");
+  const msg = parseEager(raw);
+  assertEquals(msg.attachments.length, 1);
+  assertEquals(msg.attachments[0].filename, "テスト.txt");
 });

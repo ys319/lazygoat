@@ -147,22 +147,20 @@ function splitHeaderFields(raw: string): RawField[] {
         currentValue += "\r\n" + line;
       }
     } else {
-      // New field - save previous if exists
-      if (currentName) {
-        fields.push({ name: currentName, rawValue: currentValue });
-      }
-
       const colonIdx = line.indexOf(":");
       if (colonIdx > 0) {
+        // New field - save previous if exists
+        if (currentName) {
+          fields.push({ name: currentName, rawValue: currentValue });
+        }
         currentName = line.slice(0, colonIdx);
         currentValue = line.slice(colonIdx + 1);
       } else {
-        // Malformed header line - treat as value of previous
+        // Malformed header line - treat as continuation of previous field
         if (currentName) {
           currentValue += "\r\n" + line;
         }
-        currentName = "";
-        currentValue = "";
+        // If no current field, silently skip
       }
     }
   }

@@ -16,8 +16,8 @@
  * @module
  */
 
-export { parse, LazyMessage } from "./src/message.ts";
-export type { Address, Attachment } from "./src/message.ts";
+export { parse, parseEager, LazyMessage } from "./src/message.ts";
+export type { Address, Attachment, ParsedMessage, ParsedPart } from "./src/message.ts";
 export type { MediaType } from "./src/media_type.ts";
 export { HeaderMap } from "./src/header.ts";
 export { MimePart } from "./src/part.ts";

@@ -17,7 +17,7 @@ const B64 = new Uint8Array(128);
 
 /**
  * Decode a Base64 string to bytes.
- * Tolerant of whitespace and line breaks in input.
+ * Tolerant of whitespace, line breaks, and missing padding in input.
  */
 export function decodeBase64(input: string): Uint8Array {
   // Strip all whitespace (regex is fast in V8's C++ implementation)
@@ -26,25 +26,49 @@ export function decodeBase64(input: string): Uint8Array {
   const len = clean.length;
   if (len === 0) return new Uint8Array(0);
 
-  // Calculate output size accounting for padding
-  let padding = 0;
-  if (len >= 1 && clean[len - 1] === "=") padding++;
-  if (len >= 2 && clean[len - 2] === "=") padding++;
-  const outLen = ((len * 3) >>> 2) - padding;
+  // Strip trailing padding '=' to get the data-carrying portion
+  let dataLen = len;
+  while (dataLen > 0 && clean[dataLen - 1] === "=") dataLen--;
+  if (dataLen === 0) return new Uint8Array(0);
+
+  // Calculate output size from data characters
+  const fullBlocks = Math.floor(dataLen / 4);
+  const tailChars = dataLen % 4;
+
+  // Single trailing char is invalid base64, ignore it
+  if (tailChars === 1) dataLen--;
+
+  const validTail = tailChars >= 2 ? tailChars : 0;
+  const outLen = fullBlocks * 3 + (validTail === 2 ? 1 : validTail === 3 ? 2 : 0);
   if (outLen <= 0) return new Uint8Array(0);
 
   const out = new Uint8Array(outLen);
   let j = 0;
 
-  for (let i = 0; i < len; i += 4) {
-    const a = B64[clean.charCodeAt(i)];
-    const b = B64[clean.charCodeAt(i + 1)];
-    const c = B64[clean.charCodeAt(i + 2)];
-    const d = B64[clean.charCodeAt(i + 3)];
+  // Process full 4-char blocks
+  const blockEnd = fullBlocks * 4;
+  for (let i = 0; i < blockEnd; i += 4) {
+    const a = B64[clean.charCodeAt(i)] ?? 0;
+    const b = B64[clean.charCodeAt(i + 1)] ?? 0;
+    const c = B64[clean.charCodeAt(i + 2)] ?? 0;
+    const d = B64[clean.charCodeAt(i + 3)] ?? 0;
 
     out[j++] = (a << 2) | (b >>> 4);
     if (j < outLen) out[j++] = ((b & 0x0f) << 4) | (c >>> 2);
     if (j < outLen) out[j++] = ((c & 0x03) << 6) | d;
+  }
+
+  // Process remaining 2-3 data chars (unpadded tail)
+  if (validTail === 2) {
+    const a = B64[clean.charCodeAt(blockEnd)] ?? 0;
+    const b = B64[clean.charCodeAt(blockEnd + 1)] ?? 0;
+    out[j++] = (a << 2) | (b >>> 4);
+  } else if (validTail === 3) {
+    const a = B64[clean.charCodeAt(blockEnd)] ?? 0;
+    const b = B64[clean.charCodeAt(blockEnd + 1)] ?? 0;
+    const c = B64[clean.charCodeAt(blockEnd + 2)] ?? 0;
+    out[j++] = (a << 2) | (b >>> 4);
+    out[j++] = ((b & 0x0f) << 4) | (c >>> 2);
   }
 
   return out;
@@ -65,7 +89,9 @@ function hexVal(c: number): number {
  * Handles soft line breaks (=\r\n or =\n).
  */
 export function decodeQuotedPrintable(input: string): Uint8Array {
-  const out: number[] = [];
+  // QP output is always <= input size; pre-allocate to avoid dynamic array overhead
+  const out = new Uint8Array(input.length);
+  let j = 0;
   let i = 0;
   const len = input.length;
 
@@ -82,25 +108,25 @@ export function decodeQuotedPrintable(input: string): Uint8Array {
         const hi = hexVal(input.charCodeAt(i + 1));
         const lo = hexVal(input.charCodeAt(i + 2));
         if (hi >= 0 && lo >= 0) {
-          out.push((hi << 4) | lo);
+          out[j++] = (hi << 4) | lo;
           i += 3;
         } else {
           // Malformed =XX, output literal
-          out.push(ch);
+          out[j++] = ch;
           i++;
         }
       } else {
         // Trailing =, output literal
-        out.push(ch);
+        out[j++] = ch;
         i++;
       }
     } else {
-      out.push(ch);
+      out[j++] = ch;
       i++;
     }
   }
 
-  return new Uint8Array(out);
+  return out.subarray(0, j);
 }
 
 /**
@@ -109,38 +135,40 @@ export function decodeQuotedPrintable(input: string): Uint8Array {
  * are slightly different from body QP.
  */
 function decodeQEncoding(input: string): Uint8Array {
-  const out: number[] = [];
+  const out = new Uint8Array(input.length);
+  let j = 0;
   let i = 0;
   const len = input.length;
 
   while (i < len) {
     const ch = input.charCodeAt(i);
     if (ch === 0x5f /* _ */) {
-      out.push(0x20); // space
+      out[j++] = 0x20; // space
       i++;
     } else if (ch === 0x3d /* = */ && i + 2 < len) {
       const hi = hexVal(input.charCodeAt(i + 1));
       const lo = hexVal(input.charCodeAt(i + 2));
       if (hi >= 0 && lo >= 0) {
-        out.push((hi << 4) | lo);
+        out[j++] = (hi << 4) | lo;
         i += 3;
       } else {
-        out.push(ch);
+        out[j++] = ch;
         i++;
       }
     } else {
-      out.push(ch);
+      out[j++] = ch;
       i++;
     }
   }
 
-  return new Uint8Array(out);
+  return out.subarray(0, j);
 }
 
 // Shared decoder for ASCII (used in transfer-encoding hot paths)
 const ASCII_DECODER = new TextDecoder("ascii");
 
-// Cache TextDecoder instances per charset
+// Cache TextDecoder instances per charset (bounded to prevent memory leak from malicious charsets)
+const MAX_DECODER_CACHE_SIZE = 64;
 const decoderCache = new Map<string, TextDecoder>();
 
 /**
@@ -154,8 +182,18 @@ export function decodeCharset(data: Uint8Array, charset: string): string {
     try {
       decoder = new TextDecoder(normalized);
     } catch {
-      // Unknown charset, fall back to UTF-8
-      decoder = new TextDecoder("utf-8", { fatal: false });
+      // Unknown charset: use cached UTF-8 decoder to avoid cache pollution
+      decoder = decoderCache.get("utf-8");
+      if (!decoder) {
+        decoder = new TextDecoder("utf-8", { fatal: false });
+        decoderCache.set("utf-8", decoder);
+      }
+      return decoder.decode(data);
+    }
+    if (decoderCache.size >= MAX_DECODER_CACHE_SIZE) {
+      // Evict oldest entry
+      const firstKey = decoderCache.keys().next().value!;
+      decoderCache.delete(firstKey);
     }
     decoderCache.set(normalized, decoder);
   }
@@ -201,27 +239,15 @@ function normalizeCharset(charset: string): string {
 const ENCODED_WORD_RE =
   /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g;
 
-const ADJACENT_ENCODED_WORDS_RE =
-  /=\?([^?]+)\?([BbQq])\?([^?]*)\?=(\s+=\?)/g;
-
 /**
  * Decode RFC 2047 encoded words in a header value.
  */
 export function decodeRfc2047(input: string): string {
   if (!input.includes("=?")) return input;
 
-  // Remove whitespace between adjacent encoded words (RFC 2047 §6.2)
-  let processed = input.replace(ADJACENT_ENCODED_WORDS_RE, "=?$1?$2?$3?==?");
-
-  // Keep replacing until stable (handles chains of 3+ encoded words)
-  let prev: string;
-  do {
-    prev = processed;
-    processed = processed.replace(
-      ADJACENT_ENCODED_WORDS_RE,
-      "=?$1?$2?$3?==?",
-    );
-  } while (processed !== prev);
+  // Remove whitespace between adjacent encoded words in a single pass (RFC 2047 §6.2).
+  // This replaces the previous O(n²) do-while loop with a single O(n) replace.
+  const processed = input.replace(/\?=\s+=\?/g, "?==?");
 
   return processed.replace(
     ENCODED_WORD_RE,

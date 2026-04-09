@@ -24,6 +24,9 @@ export { HeaderMap } from "./header.ts";
 export { type MediaType } from "./media_type.ts";
 export { MimePart } from "./part.ts";
 
+// Shared TextEncoder instance (avoid per-call allocation)
+const TEXT_ENCODER = new TextEncoder();
+
 export interface Attachment {
   /** Filename (if available). */
   readonly filename: string;
@@ -227,7 +230,7 @@ export class LazyMessage {
   /** The root MIME part (lazy). */
   get rootPart(): MimePart {
     if (!this.#rootPart) {
-      const bodyBytes = new TextEncoder().encode(this.rawBodySection);
+      const bodyBytes = TEXT_ENCODER.encode(this.rawBodySection);
       this.#rootPart = new MimePart(this.rawHeaderSection, bodyBytes);
     }
     return this.#rootPart;
@@ -314,6 +317,163 @@ export function parse(raw: string | Uint8Array): LazyMessage {
   return new LazyMessage(raw);
 }
 
+// ── Eager parse API ──
+
+/**
+ * A fully-parsed MIME part structure (plain object, no lazy evaluation).
+ */
+export interface ParsedPart {
+  /** Parsed Content-Type. */
+  readonly contentType: MediaType;
+  /** Content-Transfer-Encoding value. */
+  readonly transferEncoding: string;
+  /** Charset from Content-Type. */
+  readonly charset: string;
+  /** Content-Disposition value. */
+  readonly disposition: string | null;
+  /** Filename from Content-Disposition or Content-Type. */
+  readonly filename: string | null;
+  /** Content-ID header. */
+  readonly contentId: string | null;
+  /** Whether this is a multipart type. */
+  readonly isMultipart: boolean;
+  /** Whether this is a text type. */
+  readonly isText: boolean;
+  /** Decoded text content (null for non-text parts). */
+  readonly text: string | null;
+  /** Transfer-decoded body bytes. */
+  readonly body: Uint8Array;
+  /** Child parts (for multipart types). */
+  readonly parts: ParsedPart[];
+  /** All headers as key-value pairs. */
+  readonly headers: ReadonlyArray<[string, string]>;
+}
+
+/**
+ * A fully-parsed email message (plain object, no lazy evaluation).
+ * Useful for debugging, serialization, and complete inspection.
+ */
+export interface ParsedMessage {
+  /** Decoded Subject header. */
+  readonly subject: string;
+  /** Parsed From addresses. */
+  readonly from: readonly Address[];
+  /** Parsed To addresses. */
+  readonly to: readonly Address[];
+  /** Parsed Cc addresses. */
+  readonly cc: readonly Address[];
+  /** Parsed Bcc addresses. */
+  readonly bcc: readonly Address[];
+  /** Parsed Reply-To addresses. */
+  readonly replyTo: readonly Address[];
+  /** Parsed Date header. */
+  readonly date: Date | null;
+  /** Message-ID header (without angle brackets). */
+  readonly messageId: string;
+  /** In-Reply-To header. */
+  readonly inReplyTo: string;
+  /** References header (list of message IDs). */
+  readonly references: readonly string[];
+  /** MIME-Version header. */
+  readonly mimeVersion: string;
+  /** Root Content-Type. */
+  readonly contentType: MediaType;
+  /** Plain text body content. */
+  readonly text: string | null;
+  /** HTML body content. */
+  readonly html: string | null;
+  /** Attachment list. */
+  readonly attachments: readonly Attachment[];
+  /** Inline attachment list. */
+  readonly inlineAttachments: readonly Attachment[];
+  /** All headers as key-value pairs. */
+  readonly headers: ReadonlyArray<[string, string]>;
+  /** Full MIME tree structure. */
+  readonly rootPart: ParsedPart;
+  /** All leaf MIME parts flattened. */
+  readonly parts: readonly ParsedPart[];
+}
+
+/**
+ * Eagerly resolve a MimePart into a plain ParsedPart object.
+ */
+function resolvePart(part: MimePart, depth = 0): ParsedPart {
+  const childParts = depth > MAX_MIME_DEPTH
+    ? []
+    : part.parts.map((child) => resolvePart(child, depth + 1));
+  return {
+    contentType: part.contentType,
+    transferEncoding: part.transferEncoding,
+    charset: part.charset,
+    disposition: part.disposition,
+    filename: part.filename,
+    contentId: part.contentId,
+    isMultipart: part.isMultipart,
+    isText: part.isText,
+    text: part.text,
+    body: part.body,
+    parts: childParts,
+    headers: [...part.headers.entries()],
+  };
+}
+
+/**
+ * Parse raw email data and eagerly evaluate ALL properties.
+ *
+ * Unlike `parse()` which returns a lazy message, this function immediately
+ * parses everything and returns a plain object. Useful for:
+ * - Debugging and inspection
+ * - Serialization (JSON.stringify-friendly, except for Uint8Array fields)
+ * - Cases where you need all fields and want predictable timing
+ *
+ * @example
+ * ```ts
+ * import { parseEager } from "./mod.ts";
+ *
+ * const msg = parseEager(rawEmail);
+ * console.log(JSON.stringify(msg, null, 2)); // inspect full structure
+ * ```
+ */
+export function parseEager(raw: string | Uint8Array): ParsedMessage {
+  const msg = new LazyMessage(raw);
+  const rootPart = resolvePart(msg.rootPart);
+
+  // Flatten leaf parts from the resolved tree
+  const leafParts: ParsedPart[] = [];
+  function collectLeaves(part: ParsedPart): void {
+    if (part.isMultipart) {
+      for (const child of part.parts) {
+        collectLeaves(child);
+      }
+    } else {
+      leafParts.push(part);
+    }
+  }
+  collectLeaves(rootPart);
+
+  return {
+    subject: msg.subject,
+    from: msg.from,
+    to: msg.to,
+    cc: msg.cc,
+    bcc: msg.bcc,
+    replyTo: msg.replyTo,
+    date: msg.date,
+    messageId: msg.messageId,
+    inReplyTo: msg.inReplyTo,
+    references: msg.references,
+    mimeVersion: msg.mimeVersion,
+    contentType: msg.contentType,
+    text: msg.text,
+    html: msg.html,
+    attachments: msg.attachments,
+    inlineAttachments: msg.inlineAttachments,
+    headers: [...msg.headers.entries()],
+    rootPart,
+    parts: leafParts,
+  };
+}
+
 // ── Utility functions ──
 
 /** Maximum MIME tree recursion depth to prevent stack overflow on malicious inputs. */
@@ -328,17 +488,22 @@ function stripAngleBrackets(s: string): string {
 
 /**
  * Flatten the MIME tree into a list of leaf parts.
+ * Uses accumulator pattern to avoid intermediate array allocations.
  */
-function flattenParts(part: MimePart, depth = 0): MimePart[] {
-  if (depth > MAX_MIME_DEPTH) return [];
+function flattenParts(
+  part: MimePart,
+  out: MimePart[] = [],
+  depth = 0,
+): MimePart[] {
+  if (depth > MAX_MIME_DEPTH) return out;
   if (part.isMultipart) {
-    const result: MimePart[] = [];
     for (const child of part.parts) {
-      result.push(...flattenParts(child, depth + 1));
+      flattenParts(child, out, depth + 1);
     }
-    return result;
+  } else {
+    out.push(part);
   }
-  return [part];
+  return out;
 }
 
 /**
