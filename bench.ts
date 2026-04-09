@@ -12,7 +12,9 @@ import { parseMbox, parseMboxStream } from "./src/mbox.ts";
 
 const simpleText = await Deno.readTextFile("testdata/basic/simple_text.eml");
 const altEml = await Deno.readTextFile("testdata/multipart/alternative.eml");
-const complexEml = await Deno.readTextFile("testdata/multipart/complex_b64_qp.eml");
+const complexEml = await Deno.readTextFile(
+  "testdata/multipart/complex_b64_qp.eml",
+);
 const multipartMixed = await Deno.readTextFile("testdata/multipart/mixed.eml");
 const nestedMultipart = await Deno.readTextFile(
   "testdata/multipart/nested.eml",
@@ -21,10 +23,12 @@ const nestedMultipart = await Deno.readTextFile(
 // Generate a large email for stress testing
 function generateLargeEmail(partCount: number): string {
   const boundary = "LARGE-BOUNDARY-" + Math.random().toString(36).slice(2);
-  let email = `From: sender@example.com\r\nTo: recipient@example.com\r\nSubject: Large email\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
+  let email =
+    `From: sender@example.com\r\nTo: recipient@example.com\r\nSubject: Large email\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="${boundary}"\r\n\r\n`;
 
   for (let i = 0; i < partCount; i++) {
-    email += `--${boundary}\r\nContent-Type: text/plain; charset="UTF-8"\r\n\r\n`;
+    email +=
+      `--${boundary}\r\nContent-Type: text/plain; charset="UTF-8"\r\n\r\n`;
     email += `This is part ${i + 1} of the email. `.repeat(20) + "\r\n";
   }
   email += `--${boundary}--\r\n`;
@@ -62,9 +66,12 @@ Deno.bench("subject only - multipart/alternative.eml (encoded)", () => {
   parse(altEml).subject;
 });
 
-Deno.bench("subject only - multipart/complex_b64_qp.eml (multi-line encoded)", () => {
-  parse(complexEml).subject;
-});
+Deno.bench(
+  "subject only - multipart/complex_b64_qp.eml (multi-line encoded)",
+  () => {
+    parse(complexEml).subject;
+  },
+);
 
 Deno.bench("subject only - large (50 parts)", () => {
   parse(largeEmail).subject;
@@ -108,9 +115,12 @@ Deno.bench("html body - multipart/alternative.eml", () => {
   parse(altEml).html;
 });
 
-Deno.bench("html body - multipart/complex_b64_qp.eml (quoted-printable)", () => {
-  parse(complexEml).html;
-});
+Deno.bench(
+  "html body - multipart/complex_b64_qp.eml (quoted-printable)",
+  () => {
+    parse(complexEml).html;
+  },
+);
 
 // ── Attachments ──
 

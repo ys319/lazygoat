@@ -65,14 +65,20 @@ function parseParams(input: string, out: Map<string, string>): void {
 
   while (i < len) {
     // Skip whitespace and semicolons
-    while (i < len && (input[i] === " " || input[i] === "\t" || input[i] === ";" || input[i] === "\r" || input[i] === "\n")) {
+    while (
+      i < len &&
+      (input[i] === " " || input[i] === "\t" || input[i] === ";" ||
+        input[i] === "\r" || input[i] === "\n")
+    ) {
       i++;
     }
     if (i >= len) break;
 
     // Read parameter name
     const nameStart = i;
-    while (i < len && input[i] !== "=" && input[i] !== ";" && input[i] !== " ") {
+    while (
+      i < len && input[i] !== "=" && input[i] !== ";" && input[i] !== " "
+    ) {
       i++;
     }
     const name = input.slice(nameStart, i).trim().toLowerCase();
@@ -111,7 +117,9 @@ function parseParams(input: string, out: Map<string, string>): void {
     } else {
       // Token value (unquoted)
       const valStart = i;
-      while (i < len && input[i] !== ";" && input[i] !== " " && input[i] !== "\t") {
+      while (
+        i < len && input[i] !== ";" && input[i] !== " " && input[i] !== "\t"
+      ) {
         i++;
       }
       value = input.slice(valStart, i).trim();

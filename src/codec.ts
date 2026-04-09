@@ -39,7 +39,8 @@ export function decodeBase64(input: string): Uint8Array {
   if (tailChars === 1) dataLen--;
 
   const validTail = tailChars >= 2 ? tailChars : 0;
-  const outLen = fullBlocks * 3 + (validTail === 2 ? 1 : validTail === 3 ? 2 : 0);
+  const outLen = fullBlocks * 3 +
+    (validTail === 2 ? 1 : validTail === 3 ? 2 : 0);
   if (outLen <= 0) return new Uint8Array(0);
 
   const out = new Uint8Array(outLen);
@@ -98,7 +99,10 @@ export function decodeQuotedPrintable(input: string): Uint8Array {
   while (i < len) {
     const ch = input.charCodeAt(i);
     if (ch === 0x3d /* = */) {
-      if (i + 1 < len && input.charCodeAt(i + 1) === 0x0d && i + 2 < len && input.charCodeAt(i + 2) === 0x0a) {
+      if (
+        i + 1 < len && input.charCodeAt(i + 1) === 0x0d && i + 2 < len &&
+        input.charCodeAt(i + 2) === 0x0a
+      ) {
         // Soft line break =\r\n
         i += 3;
       } else if (i + 1 < len && input.charCodeAt(i + 1) === 0x0a) {
@@ -236,8 +240,7 @@ function normalizeCharset(charset: string): string {
  * Adjacent encoded words (possibly separated by linear whitespace)
  * must be concatenated without inserting space between them (RFC 2047 §6.2).
  */
-const ENCODED_WORD_RE =
-  /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g;
+const ENCODED_WORD_RE = /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g;
 
 /**
  * Decode RFC 2047 encoded words in a header value.

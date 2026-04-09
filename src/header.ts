@@ -151,7 +151,10 @@ function splitHeaderFields(raw: string): RawField[] {
 
     if (line[0] === " " || line[0] === "\t") {
       // Continuation line — enforce value size limit
-      if (currentName && currentValue.length + line.length + 2 <= MAX_HEADER_VALUE_LENGTH) {
+      if (
+        currentName &&
+        currentValue.length + line.length + 2 <= MAX_HEADER_VALUE_LENGTH
+      ) {
         currentValue += "\r\n" + line;
       }
     } else {
@@ -159,14 +162,21 @@ function splitHeaderFields(raw: string): RawField[] {
       if (colonIdx > 0) {
         // New field - save previous if exists
         if (currentName) {
-          fields.push({ name: currentName, lowerName: currentName.toLowerCase(), rawValue: currentValue });
+          fields.push({
+            name: currentName,
+            lowerName: currentName.toLowerCase(),
+            rawValue: currentValue,
+          });
           if (fields.length >= MAX_HEADER_FIELDS) break;
         }
         currentName = line.slice(0, colonIdx);
         currentValue = line.slice(colonIdx + 1);
       } else {
         // Malformed header line - treat as continuation of previous field
-        if (currentName && currentValue.length + line.length + 2 <= MAX_HEADER_VALUE_LENGTH) {
+        if (
+          currentName &&
+          currentValue.length + line.length + 2 <= MAX_HEADER_VALUE_LENGTH
+        ) {
           currentValue += "\r\n" + line;
         }
         // If no current field, silently skip
@@ -176,7 +186,11 @@ function splitHeaderFields(raw: string): RawField[] {
 
   // Save last field
   if (currentName && fields.length < MAX_HEADER_FIELDS) {
-    fields.push({ name: currentName, lowerName: currentName.toLowerCase(), rawValue: currentValue });
+    fields.push({
+      name: currentName,
+      lowerName: currentName.toLowerCase(),
+      rawValue: currentValue,
+    });
   }
 
   return fields;

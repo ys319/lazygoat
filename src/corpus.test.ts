@@ -5,7 +5,7 @@
  * and MIME tree traversal across diverse email formats.
  */
 
-import { assertEquals, assertExists, assert } from "@std/assert";
+import { assert, assertEquals, assertExists } from "@std/assert";
 import { parse } from "../mod.ts";
 
 async function loadCorpus(filename: string): Promise<string> {
@@ -95,7 +95,10 @@ Deno.test("corpus: ISO-8859-1 headers (RFC 2047 Q-encoding) and QP body", async 
   assertEquals(msg.subject, "Réunion d'équipe");
   assertEquals(msg.from[0].name, "François Martin");
   assertExists(msg.text);
-  assert(msg.text!.includes("réunion"), "Body should be decoded from ISO-8859-1");
+  assert(
+    msg.text!.includes("réunion"),
+    "Body should be decoded from ISO-8859-1",
+  );
   assert(msg.text!.includes("François"), "Body should include decoded ç");
 });
 
@@ -107,7 +110,10 @@ Deno.test("corpus: Japanese email with UTF-8 B-encoded headers and base64 body",
   assertEquals(msg.subject, "テスト");
   assertEquals(msg.from[0].name, "山田太郎");
   assertExists(msg.text);
-  assert(msg.text!.includes("テスト"), "Base64 body should decode to Japanese text");
+  assert(
+    msg.text!.includes("テスト"),
+    "Base64 body should decode to Japanese text",
+  );
 });
 
 // ── S/MIME signed (multipart/signed) ──

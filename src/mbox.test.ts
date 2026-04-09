@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { parseMbox, parseMboxStream, countMboxMessages } from "./mbox.ts";
+import { countMboxMessages, parseMbox, parseMboxStream } from "./mbox.ts";
 
 // ── Helper: create a ReadableStream from a string ──
 
@@ -20,7 +20,10 @@ function stringToStream(input: string): ReadableStream<Uint8Array> {
 /**
  * Create a stream that emits data in small chunks to test buffering.
  */
-function chunkedStream(input: string, chunkSize: number): ReadableStream<Uint8Array> {
+function chunkedStream(
+  input: string,
+  chunkSize: number,
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
   const bytes = encoder.encode(input);
   let offset = 0;

@@ -134,36 +134,41 @@ export class LazyMessage {
 
   /** Parsed From addresses. */
   get from(): Address[] {
-    return this.#cached("from", () =>
-      parseAddressList(this.headers.get("from") ?? ""),
+    return this.#cached(
+      "from",
+      () => parseAddressList(this.headers.get("from") ?? ""),
     );
   }
 
   /** Parsed To addresses. */
   get to(): Address[] {
-    return this.#cached("to", () =>
-      parseAddressList(this.headers.get("to") ?? ""),
+    return this.#cached(
+      "to",
+      () => parseAddressList(this.headers.get("to") ?? ""),
     );
   }
 
   /** Parsed Cc addresses. */
   get cc(): Address[] {
-    return this.#cached("cc", () =>
-      parseAddressList(this.headers.get("cc") ?? ""),
+    return this.#cached(
+      "cc",
+      () => parseAddressList(this.headers.get("cc") ?? ""),
     );
   }
 
   /** Parsed Bcc addresses. */
   get bcc(): Address[] {
-    return this.#cached("bcc", () =>
-      parseAddressList(this.headers.get("bcc") ?? ""),
+    return this.#cached(
+      "bcc",
+      () => parseAddressList(this.headers.get("bcc") ?? ""),
     );
   }
 
   /** Parsed Reply-To addresses. */
   get replyTo(): Address[] {
-    return this.#cached("replyTo", () =>
-      parseAddressList(this.headers.get("reply-to") ?? ""),
+    return this.#cached(
+      "replyTo",
+      () => parseAddressList(this.headers.get("reply-to") ?? ""),
     );
   }
 
@@ -553,7 +558,11 @@ function findBodyContent(
 /**
  * Collect explicit attachment parts from the MIME tree.
  */
-function collectAttachments(part: MimePart, out: Attachment[], depth = 0): void {
+function collectAttachments(
+  part: MimePart,
+  out: Attachment[],
+  depth = 0,
+): void {
   if (depth > MAX_MIME_DEPTH) return;
   if (part.isMultipart) {
     for (const child of part.parts) {

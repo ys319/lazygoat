@@ -72,9 +72,12 @@ function unescapeMboxrd(raw: string): string {
   // Only process lines that start with one or more ">" followed by "From "
   // In mboxrd format, every ">" prefix before "From " at line start was added
   // during storage and should have exactly one ">" removed.
-  return raw.replace(/^(>+)(From )/gm, (_match, arrows: string, from: string) => {
-    return arrows.slice(1) + from;
-  });
+  return raw.replace(
+    /^(>+)(From )/gm,
+    (_match, arrows: string, from: string) => {
+      return arrows.slice(1) + from;
+    },
+  );
 }
 
 /**
@@ -133,7 +136,9 @@ export function parseMbox(input: string): MboxMessage[] {
   // Flush last message
   if (currentFromLine !== null) {
     // Remove trailing empty lines
-    while (messageLines.length > 0 && messageLines[messageLines.length - 1] === "") {
+    while (
+      messageLines.length > 0 && messageLines[messageLines.length - 1] === ""
+    ) {
       messageLines.pop();
     }
     const raw = unescapeMboxrd(messageLines.join("\n"));
@@ -165,7 +170,9 @@ class LineBuffer {
     this.#totalLen += chunk.length;
 
     // Join only when we need to scan for newlines
-    const buffer = this.#chunks.length === 1 ? this.#chunks[0] : this.#chunks.join("");
+    const buffer = this.#chunks.length === 1
+      ? this.#chunks[0]
+      : this.#chunks.join("");
     const lines: string[] = [];
     let start = 0;
 
@@ -203,7 +210,9 @@ class LineBuffer {
    */
   flush(): string | null {
     if (this.#totalLen === 0) return null;
-    const line = this.#chunks.length === 1 ? this.#chunks[0] : this.#chunks.join("");
+    const line = this.#chunks.length === 1
+      ? this.#chunks[0]
+      : this.#chunks.join("");
     this.#chunks = [];
     this.#totalLen = 0;
     return line;
@@ -240,7 +249,9 @@ export async function* parseMboxStream(
   function buildMessage(): MboxMessage | null {
     if (currentFromLine === null) return null;
     // Remove trailing empty lines
-    while (messageLines.length > 0 && messageLines[messageLines.length - 1] === "") {
+    while (
+      messageLines.length > 0 && messageLines[messageLines.length - 1] === ""
+    ) {
       messageLines.pop();
     }
     const raw = unescapeMboxrd(messageLines.join("\n"));
@@ -256,7 +267,9 @@ export async function* parseMboxStream(
       const { done, value } = await reader.read();
       if (done) break;
 
-      const text = typeof value === "string" ? value : decoder.decode(value, { stream: true });
+      const text = typeof value === "string"
+        ? value
+        : decoder.decode(value, { stream: true });
       const lines = lineBuffer.push(text);
 
       for (const line of lines) {
@@ -314,7 +327,9 @@ export async function countMboxMessages(
       const { done, value } = await reader.read();
       if (done) break;
 
-      const text = typeof value === "string" ? value : decoder.decode(value, { stream: true });
+      const text = typeof value === "string"
+        ? value
+        : decoder.decode(value, { stream: true });
       const lines = lineBuffer.push(text);
 
       for (const line of lines) {

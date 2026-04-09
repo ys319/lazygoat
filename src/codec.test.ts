@@ -151,8 +151,7 @@ Deno.test("decodeRfc2047 - Q-encoding underscore as space", () => {
 });
 
 Deno.test("decodeRfc2047 - adjacent encoded words (no space between)", () => {
-  const input =
-    "=?UTF-8?B?44GT44KT?= =?UTF-8?B?44Gr44Gh44Gv?=";
+  const input = "=?UTF-8?B?44GT44KT?= =?UTF-8?B?44Gr44Gh44Gv?=";
   assertEquals(decodeRfc2047(input), "こんにちは");
 });
 

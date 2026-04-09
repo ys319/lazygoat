@@ -270,7 +270,10 @@ Deno.test("encoding/qp_body.eml -QP decoded body", async () => {
 Deno.test("encoding/base64_body.eml -base64 decoded body", async () => {
   const msg = parse(await loadEml("encoding/base64_body.eml"));
   assertExists(msg.text);
-  assertEquals(msg.text!.includes("これはBase64でエンコードされた本文です"), true);
+  assertEquals(
+    msg.text!.includes("これはBase64でエンコードされた本文です"),
+    true,
+  );
   assertEquals(msg.text!.includes("Hello from Base64!"), true);
 });
 
@@ -410,14 +413,16 @@ Deno.test("edge case - content type access", async () => {
 // ── Unclosed quote in Content-Disposition filename ──
 
 Deno.test("edge case - unclosed quote in Content-Disposition filename", () => {
-  const headers = `Content-Type: application/octet-stream\r\nContent-Disposition: attachment; filename="broken`;
+  const headers =
+    `Content-Type: application/octet-stream\r\nContent-Disposition: attachment; filename="broken`;
   const body = new TextEncoder().encode("data");
   const part = new MimePart(headers, body);
   assertEquals(part.filename, "broken");
 });
 
 Deno.test("edge case - unclosed quote with semicolon after", () => {
-  const headers = `Content-Type: application/octet-stream\r\nContent-Disposition: attachment; filename="broken; other=val`;
+  const headers =
+    `Content-Type: application/octet-stream\r\nContent-Disposition: attachment; filename="broken; other=val`;
   const body = new TextEncoder().encode("data");
   const part = new MimePart(headers, body);
   assertEquals(part.filename, "broken");

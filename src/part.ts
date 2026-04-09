@@ -54,7 +54,9 @@ export class MimePart {
   /** Parsed Content-Type (lazy). */
   get contentType(): MediaType {
     if (!this.#contentType) {
-      this.#contentType = parseMediaType(this.headers.get("content-type") ?? undefined);
+      this.#contentType = parseMediaType(
+        this.headers.get("content-type") ?? undefined,
+      );
     }
     return this.#contentType;
   }
@@ -227,7 +229,10 @@ export function splitMultipartBody(
     if (parts.length >= MAX_MIME_PARTS) break;
 
     // Check for close delimiter
-    if (text.slice(nextBoundaryIdx, nextBoundaryIdx + closeDelimiter.length) === closeDelimiter) {
+    if (
+      text.slice(nextBoundaryIdx, nextBoundaryIdx + closeDelimiter.length) ===
+        closeDelimiter
+    ) {
       break;
     }
 
@@ -335,7 +340,10 @@ function extractParam(headerValue: string, paramName: string): string | null {
 
     // Make sure the next non-whitespace char after name is '=' (not '*=')
     let eqIdx = paramIdx + target.length;
-    while (eqIdx < headerValue.length && (headerValue[eqIdx] === " " || headerValue[eqIdx] === "\t")) {
+    while (
+      eqIdx < headerValue.length &&
+      (headerValue[eqIdx] === " " || headerValue[eqIdx] === "\t")
+    ) {
       eqIdx++;
     }
 
@@ -351,7 +359,10 @@ function extractParam(headerValue: string, paramName: string): string | null {
 
     // Extract value
     let valIdx = eqIdx + 1;
-    while (valIdx < headerValue.length && (headerValue[valIdx] === " " || headerValue[valIdx] === "\t")) {
+    while (
+      valIdx < headerValue.length &&
+      (headerValue[valIdx] === " " || headerValue[valIdx] === "\t")
+    ) {
       valIdx++;
     }
 
@@ -371,7 +382,10 @@ function extractParam(headerValue: string, paramName: string): string | null {
 
     // Token value
     let endIdx = valIdx;
-    while (endIdx < headerValue.length && headerValue[endIdx] !== ";" && headerValue[endIdx] !== " " && headerValue[endIdx] !== "\t") {
+    while (
+      endIdx < headerValue.length && headerValue[endIdx] !== ";" &&
+      headerValue[endIdx] !== " " && headerValue[endIdx] !== "\t"
+    ) {
       endIdx++;
     }
     return headerValue.slice(valIdx, endIdx);
@@ -405,7 +419,10 @@ function extractRfc2231Param(
 
     // Find '=' after "name*"
     let eqIdx = paramIdx + starTarget.length;
-    while (eqIdx < headerValue.length && (headerValue[eqIdx] === " " || headerValue[eqIdx] === "\t")) {
+    while (
+      eqIdx < headerValue.length &&
+      (headerValue[eqIdx] === " " || headerValue[eqIdx] === "\t")
+    ) {
       eqIdx++;
     }
 
@@ -416,7 +433,10 @@ function extractRfc2231Param(
 
     // Extract raw value
     let valIdx = eqIdx + 1;
-    while (valIdx < headerValue.length && (headerValue[valIdx] === " " || headerValue[valIdx] === "\t")) {
+    while (
+      valIdx < headerValue.length &&
+      (headerValue[valIdx] === " " || headerValue[valIdx] === "\t")
+    ) {
       valIdx++;
     }
 
@@ -428,7 +448,10 @@ function extractRfc2231Param(
         : headerValue.slice(valIdx + 1);
     } else {
       let endIdx = valIdx;
-      while (endIdx < headerValue.length && headerValue[endIdx] !== ";" && headerValue[endIdx] !== " " && headerValue[endIdx] !== "\t") {
+      while (
+        endIdx < headerValue.length && headerValue[endIdx] !== ";" &&
+        headerValue[endIdx] !== " " && headerValue[endIdx] !== "\t"
+      ) {
         endIdx++;
       }
       rawValue = headerValue.slice(valIdx, endIdx);

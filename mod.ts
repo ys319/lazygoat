@@ -16,8 +16,13 @@
  * @module
  */
 
-export { parse, parseEager, LazyMessage } from "./src/message.ts";
-export type { Address, Attachment, ParsedMessage, ParsedPart } from "./src/message.ts";
+export { LazyMessage, parse, parseEager } from "./src/message.ts";
+export type {
+  Address,
+  Attachment,
+  ParsedMessage,
+  ParsedPart,
+} from "./src/message.ts";
 export type { MediaType } from "./src/media_type.ts";
 export { HeaderMap } from "./src/header.ts";
 export { MimePart } from "./src/part.ts";
@@ -25,9 +30,9 @@ export { MimePart } from "./src/part.ts";
 // Re-export codec utilities for advanced use
 export {
   decodeBase64,
+  decodeCharset,
   decodeQuotedPrintable,
   decodeRfc2047,
-  decodeCharset,
   decodeTransferEncoding,
 } from "./src/codec.ts";
 
@@ -35,9 +40,5 @@ export { parseMediaType } from "./src/media_type.ts";
 export { parseAddressList } from "./src/address.ts";
 
 // mbox support
-export {
-  parseMbox,
-  parseMboxStream,
-  countMboxMessages,
-} from "./src/mbox.ts";
+export { countMboxMessages, parseMbox, parseMboxStream } from "./src/mbox.ts";
 export type { MboxEnvelope, MboxMessage } from "./src/mbox.ts";
