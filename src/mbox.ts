@@ -153,31 +153,48 @@ export function parseMbox(input: string): MboxMessage[] {
  * Handles incremental line assembly from chunks.
  */
 class LineBuffer {
-  #buffer = "";
+  #chunks: string[] = [];
+  #totalLen = 0;
 
   /**
    * Add a chunk of data and return complete lines.
    * Incomplete lines are buffered for the next call.
    */
   push(chunk: string): string[] {
-    this.#buffer += chunk;
+    this.#chunks.push(chunk);
+    this.#totalLen += chunk.length;
+
+    // Join only when we need to scan for newlines
+    const buffer = this.#chunks.length === 1 ? this.#chunks[0] : this.#chunks.join("");
     const lines: string[] = [];
     let start = 0;
 
-    for (let i = 0; i < this.#buffer.length; i++) {
-      if (this.#buffer[i] === "\n") {
+    for (let i = 0; i < buffer.length; i++) {
+      if (buffer[i] === "\n") {
         let end = i;
-        // Strip \r if present (CRLF)
-        if (end > start && this.#buffer[end - 1] === "\r") {
+        if (end > start && buffer[end - 1] === "\r") {
           end--;
         }
-        lines.push(this.#buffer.slice(start, end));
+        lines.push(buffer.slice(start, end));
         start = i + 1;
       }
     }
 
     // Keep remainder in buffer
-    this.#buffer = this.#buffer.slice(start);
+    if (start === 0) {
+      // No newlines found — keep accumulated chunks
+      if (this.#chunks.length > 1) {
+        this.#chunks = [buffer];
+      }
+    } else if (start >= buffer.length) {
+      this.#chunks = [];
+      this.#totalLen = 0;
+    } else {
+      const remainder = buffer.slice(start);
+      this.#chunks = [remainder];
+      this.#totalLen = remainder.length;
+    }
+
     return lines;
   }
 
@@ -185,9 +202,10 @@ class LineBuffer {
    * Flush any remaining data as the final line.
    */
   flush(): string | null {
-    if (this.#buffer.length === 0) return null;
-    const line = this.#buffer;
-    this.#buffer = "";
+    if (this.#totalLen === 0) return null;
+    const line = this.#chunks.length === 1 ? this.#chunks[0] : this.#chunks.join("");
+    this.#chunks = [];
+    this.#totalLen = 0;
     return line;
   }
 }

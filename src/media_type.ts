@@ -93,20 +93,21 @@ function parseParams(input: string, out: Map<string, string>): void {
 
     let value: string;
     if (i < len && input[i] === '"') {
-      // Quoted string
+      // Quoted string — use start/end tracking to avoid char-by-char concatenation
       i++; // skip opening quote
-      let buf = "";
+      const qStart = i;
+      let hasEscape = false;
       while (i < len && input[i] !== '"') {
         if (input[i] === "\\" && i + 1 < len) {
+          hasEscape = true;
           i++;
-          buf += input[i];
-        } else {
-          buf += input[i];
         }
         i++;
       }
+      value = hasEscape
+        ? input.slice(qStart, i).replace(/\\(.)/g, "$1")
+        : input.slice(qStart, i);
       if (i < len) i++; // skip closing quote
-      value = buf;
     } else {
       // Token value (unquoted)
       const valStart = i;
@@ -139,24 +140,28 @@ function parseParams(input: string, out: Map<string, string>): void {
  * Decode RFC 2231 percent-encoded value.
  */
 function decodeRfc2231Value(encoded: string, charset: string): string {
-  const bytes: number[] = [];
-  let i = 0;
-  while (i < encoded.length) {
+  const out = new Uint8Array(encoded.length);
+  let j = 0;
+  for (let i = 0; i < encoded.length; i++) {
     if (encoded[i] === "%" && i + 2 < encoded.length) {
-      const hex = encoded.slice(i + 1, i + 3);
-      const val = parseInt(hex, 16);
-      if (!isNaN(val)) {
-        bytes.push(val);
-        i += 3;
+      const hi = hexVal(encoded.charCodeAt(i + 1));
+      const lo = hexVal(encoded.charCodeAt(i + 2));
+      if (hi >= 0 && lo >= 0) {
+        out[j++] = (hi << 4) | lo;
+        i += 2;
         continue;
       }
     }
-    bytes.push(encoded.charCodeAt(i));
-    i++;
+    out[j++] = encoded.charCodeAt(i);
   }
+  return decodeCharset(out.subarray(0, j), charset || "utf-8");
+}
 
-  const cs = charset || "utf-8";
-  return decodeCharset(new Uint8Array(bytes), cs);
+function hexVal(c: number): number {
+  if (c >= 0x30 && c <= 0x39) return c - 0x30;
+  if (c >= 0x41 && c <= 0x46) return c - 0x37;
+  if (c >= 0x61 && c <= 0x66) return c - 0x57;
+  return -1;
 }
 
 /**

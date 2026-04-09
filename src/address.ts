@@ -69,54 +69,42 @@ function splitAddresses(input: string): string[] {
   let depth = 0; // angle bracket depth
   let inQuote = false;
   let inGroup = false;
-  let current = "";
+  let start = 0;
 
   for (let i = 0; i < input.length; i++) {
     const ch = input[i];
 
     if (ch === "\\" && inQuote && i + 1 < input.length) {
-      current += ch + input[i + 1];
       i++;
       continue;
     }
 
     if (ch === '"') {
       inQuote = !inQuote;
-      current += ch;
       continue;
     }
 
-    if (inQuote) {
-      current += ch;
-      continue;
-    }
+    if (inQuote) continue;
 
     if (ch === "<") {
       depth++;
-      current += ch;
     } else if (ch === ">") {
       if (depth > 0) depth--;
-      current += ch;
     } else if (ch === ":" && depth === 0 && !inGroup) {
-      // Start of group syntax
       inGroup = true;
-      current += ch;
     } else if (ch === ";" && inGroup) {
-      // End of group syntax
       inGroup = false;
-      current += ch;
-      parts.push(current);
-      current = "";
+      parts.push(input.slice(start, i + 1));
+      start = i + 1;
     } else if (ch === "," && depth === 0 && !inGroup) {
-      parts.push(current);
-      current = "";
-    } else {
-      current += ch;
+      parts.push(input.slice(start, i));
+      start = i + 1;
     }
   }
 
-  if (current.trim()) {
-    parts.push(current);
+  const tail = input.slice(start).trim();
+  if (tail) {
+    parts.push(input.slice(start));
   }
 
   return parts;
@@ -128,6 +116,10 @@ function splitAddresses(input: string): string[] {
  * A group colon must not be inside angle brackets or quotes.
  */
 function findGroupColon(input: string): number {
+  // Pre-check: group syntax requires a semicolon somewhere in the string.
+  // This avoids O(n²) from calling indexOf(";") per colon.
+  if (input.indexOf(";") < 0) return -1;
+
   let inQuote = false;
   let depth = 0;
 
@@ -145,11 +137,7 @@ function findGroupColon(input: string): number {
     if (ch === "<") depth++;
     if (ch === ">") depth--;
     if (ch === ":" && depth === 0) {
-      // Check that there's a ";" somewhere after — this distinguishes
-      // group syntax from display names that happen to contain colons
-      if (input.indexOf(";", i + 1) >= 0) {
-        return i;
-      }
+      return i;
     }
   }
   return -1;

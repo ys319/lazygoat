@@ -252,8 +252,9 @@ function findBoundary(text: string, delimiter: string, from: number): number {
       return found;
     }
 
-    // Not at start of line, keep searching
-    idx = found + 1;
+    // Not at start of line — skip to next line to avoid O(n²) rescanning
+    const nlIdx = text.indexOf("\n", found + 1);
+    idx = nlIdx >= 0 ? nlIdx + 1 : text.length;
   }
   return -1;
 }
@@ -450,17 +451,26 @@ function extractRfc2231Param(
  * Decode RFC 2231 percent-encoded value with charset.
  */
 function decodeRfc2231Percent(encoded: string, charset: string): string {
-  const bytes: number[] = [];
+  const out = new Uint8Array(encoded.length);
+  let j = 0;
   for (let i = 0; i < encoded.length; i++) {
     if (encoded[i] === "%" && i + 2 < encoded.length) {
-      const val = parseInt(encoded.slice(i + 1, i + 3), 16);
-      if (!isNaN(val)) {
-        bytes.push(val);
+      const hi = hexVal(encoded.charCodeAt(i + 1));
+      const lo = hexVal(encoded.charCodeAt(i + 2));
+      if (hi >= 0 && lo >= 0) {
+        out[j++] = (hi << 4) | lo;
         i += 2;
         continue;
       }
     }
-    bytes.push(encoded.charCodeAt(i));
+    out[j++] = encoded.charCodeAt(i);
   }
-  return decodeCharset(new Uint8Array(bytes), charset || "utf-8");
+  return decodeCharset(out.subarray(0, j), charset || "utf-8");
+}
+
+function hexVal(c: number): number {
+  if (c >= 0x30 && c <= 0x39) return c - 0x30;
+  if (c >= 0x41 && c <= 0x46) return c - 0x37;
+  if (c >= 0x61 && c <= 0x66) return c - 0x57;
+  return -1;
 }

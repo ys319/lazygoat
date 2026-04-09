@@ -7,10 +7,18 @@
 
 import { decodeRfc2047 } from "./codec.ts";
 
+/** Maximum number of header fields to prevent DoS. */
+const MAX_HEADER_FIELDS = 10_000;
+
+/** Maximum total size (in characters) for a single header value (including continuations). */
+const MAX_HEADER_VALUE_LENGTH = 1_000_000;
+
 /** A raw header field before value decoding. */
 interface RawField {
   /** Original field name (preserving case). */
   name: string;
+  /** Pre-lowercased name for O(1) comparison. */
+  lowerName: string;
   /** Raw value (folded, may contain encoded words). */
   rawValue: string;
 }
@@ -39,7 +47,7 @@ export class HeaderMap {
     const lower = name.toLowerCase();
     const fields = this.#ensureFields();
     for (let i = 0; i < fields.length; i++) {
-      if (fields[i].name.toLowerCase() === lower) {
+      if (fields[i].lowerName === lower) {
         return this.#decodeField(i);
       }
     }
@@ -54,7 +62,7 @@ export class HeaderMap {
     const fields = this.#ensureFields();
     const result: string[] = [];
     for (let i = 0; i < fields.length; i++) {
-      if (fields[i].name.toLowerCase() === lower) {
+      if (fields[i].lowerName === lower) {
         result.push(this.#decodeField(i));
       }
     }
@@ -66,7 +74,7 @@ export class HeaderMap {
    */
   has(name: string): boolean {
     const lower = name.toLowerCase();
-    return this.#ensureFields().some((f) => f.name.toLowerCase() === lower);
+    return this.#ensureFields().some((f) => f.lowerName === lower);
   }
 
   /**
@@ -142,8 +150,8 @@ function splitHeaderFields(raw: string): RawField[] {
     if (line === "") continue;
 
     if (line[0] === " " || line[0] === "\t") {
-      // Continuation line
-      if (currentName) {
+      // Continuation line — enforce value size limit
+      if (currentName && currentValue.length + line.length + 2 <= MAX_HEADER_VALUE_LENGTH) {
         currentValue += "\r\n" + line;
       }
     } else {
@@ -151,13 +159,14 @@ function splitHeaderFields(raw: string): RawField[] {
       if (colonIdx > 0) {
         // New field - save previous if exists
         if (currentName) {
-          fields.push({ name: currentName, rawValue: currentValue });
+          fields.push({ name: currentName, lowerName: currentName.toLowerCase(), rawValue: currentValue });
+          if (fields.length >= MAX_HEADER_FIELDS) break;
         }
         currentName = line.slice(0, colonIdx);
         currentValue = line.slice(colonIdx + 1);
       } else {
         // Malformed header line - treat as continuation of previous field
-        if (currentName) {
+        if (currentName && currentValue.length + line.length + 2 <= MAX_HEADER_VALUE_LENGTH) {
           currentValue += "\r\n" + line;
         }
         // If no current field, silently skip
@@ -166,8 +175,8 @@ function splitHeaderFields(raw: string): RawField[] {
   }
 
   // Save last field
-  if (currentName) {
-    fields.push({ name: currentName, rawValue: currentValue });
+  if (currentName && fields.length < MAX_HEADER_FIELDS) {
+    fields.push({ name: currentName, lowerName: currentName.toLowerCase(), rawValue: currentValue });
   }
 
   return fields;
