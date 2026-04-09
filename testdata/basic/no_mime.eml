@@ -1,0 +1,8 @@
+From: legacy@example.com
+To: user@example.com
+Subject: No MIME headers
+Date: Sat, 06 Apr 2024 12:00:00 +0000
+Message-ID: <nomime@example.com>
+
+This is a legacy email without MIME-Version or Content-Type headers.
+It should be treated as text/plain with us-ascii charset.

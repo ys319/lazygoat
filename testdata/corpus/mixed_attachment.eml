@@ -1,0 +1,26 @@
+From: "Alice Smith" <alice@example.com>
+To: "Bob Jones" <bob@example.com>
+Subject: Email with attachment
+Date: Sat, 13 Apr 2024 14:00:00 +0000
+Message-ID: <mixed-attach-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-bound-001"
+
+--mixed-bound-001
+Content-Type: text/plain; charset="UTF-8"
+
+Hi Bob,
+
+Please find the attached document.
+
+Best regards,
+Alice
+
+--mixed-bound-001
+Content-Type: application/pdf; name="document.pdf"
+Content-Disposition: attachment; filename="document.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5k
+b2JqCg==
+--mixed-bound-001--

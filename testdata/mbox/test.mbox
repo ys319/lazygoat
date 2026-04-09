@@ -1,0 +1,65 @@
+From sender@example.com Mon Jan  1 00:00:00 2024
+From: Alice <alice@example.com>
+To: Bob <bob@example.com>
+Subject: First message
+Date: Mon, 1 Jan 2024 00:00:00 +0000
+Message-ID: <msg1@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+
+This is the first message in the mbox.
+It has multiple lines.
+
+Best regards,
+Alice
+
+From bob@example.com Mon Jan  1 01:00:00 2024
+From: Bob <bob@example.com>
+To: Alice <alice@example.com>
+Subject: Re: First message
+Date: Mon, 1 Jan 2024 01:00:00 +0000
+Message-ID: <msg2@example.com>
+In-Reply-To: <msg1@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="boundary-alt-1"
+
+--boundary-alt-1
+Content-Type: text/plain; charset="UTF-8"
+
+Thanks for the message, Alice!
+
+--boundary-alt-1
+Content-Type: text/html; charset="UTF-8"
+
+<html><body><p>Thanks for the message, Alice!</p></body></html>
+--boundary-alt-1--
+
+From charlie@example.com Mon Jan  1 02:00:00 2024
+From: =?UTF-8?B?44OB44Oj44O844Oq44O8?= <charlie@example.com>
+To: Alice <alice@example.com>, Bob <bob@example.com>
+Subject: =?UTF-8?Q?=E3=83=86=E3=82=B9=E3=83=88=E3=83=A1=E3=83=83=E3=82=BB=E3=83=BC=E3=82=B8?=
+Date: Mon, 1 Jan 2024 02:00:00 +0900
+Message-ID: <msg3@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+44GT44KM44Gv44OG44K544OI44Oh44OD44K744O844K444Gn44GZ44CC
+
+From dave@example.com Mon Jan  1 03:00:00 2024
+From: Dave <dave@example.com>
+To: team@example.com
+Subject: Message with From in body
+Date: Mon, 1 Jan 2024 03:00:00 +0000
+Message-ID: <msg4@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+
+This message has a tricky body.
+>From the beginning, we knew this would be hard.
+The line above starts with ">From " which is mboxrd escaping.
+
+Normal line here.
+
+>From my perspective, this also needs escaping in mbox format.
+

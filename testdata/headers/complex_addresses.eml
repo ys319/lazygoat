@@ -1,0 +1,14 @@
+From: "John \"JD\" Doe" <john@example.com>
+To: undisclosed-recipients:;
+Cc: "=?UTF-8?B?5bGx55Sw5aSq6YOO?=" <yamada@example.jp>,
+ plain@example.com,
+ "Alice, Bob" <group@example.com>
+Reply-To: reply@example.com
+Subject: Complex address test
+Date: Tue, 09 Apr 2024 11:00:00 +0000
+Message-ID: <complex-addr@example.com>
+In-Reply-To: <original@example.com>
+References: <first@example.com> <second@example.com>
+Content-Type: text/plain
+
+Test body for address parsing.

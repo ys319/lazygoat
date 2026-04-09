@@ -1,0 +1,52 @@
+From: designer@example.com
+To: client@example.com
+Subject: Testing nested MIME with cid
+Date: Mon, 15 Apr 2024 10:00:00 +0000
+Message-ID: <nested-cid-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="outer-bound-001"
+
+--outer-bound-001
+Content-Type: multipart/related; boundary="related-bound-001"
+
+--related-bound-001
+Content-Type: multipart/alternative; boundary="alt-bound-001"
+
+--alt-bound-001
+Content-Type: text/plain; charset="UTF-8"
+
+Please see the image below.
+
+Best regards,
+Designer Team
+--alt-bound-001
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html>
+<html>
+<body>
+<p>Please see the image below.</p>
+<img src="cid:logo@example.com" alt="Company Logo"/>
+<p>Best regards,<br>Designer Team</p>
+</body>
+</html>
+--alt-bound-001--
+
+--related-bound-001
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-ID: <logo@example.com>
+Content-Disposition: inline; filename="logo.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9
+awAAAABJRU5ErkJggg==
+--related-bound-001--
+
+--outer-bound-001
+Content-Type: application/pdf; name="report.pdf"
+Content-Disposition: attachment; filename="report.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5k
+b2JqCg==
+--outer-bound-001--

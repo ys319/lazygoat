@@ -1,0 +1,12 @@
+{
+  "name": "@ys319/lazygoat",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "tasks": {
+    "test": "deno test --allow-read",
+    "bench": "deno bench --allow-read"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  }
+}

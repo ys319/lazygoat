@@ -1,0 +1,39 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Nested multipart with inline image
+Date: Thu, 10 Apr 2024 10:00:00 +0000
+Message-ID: <nested@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="outer"
+
+--outer
+Content-Type: multipart/related; boundary="related"
+
+--related
+Content-Type: multipart/alternative; boundary="alt"
+
+--alt
+Content-Type: text/plain; charset="UTF-8"
+
+Check out this image!
+--alt
+Content-Type: text/html; charset="UTF-8"
+
+<html><body><p>Check out this image!</p><img src="cid:img001"/></body></html>
+--alt--
+
+--related
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-ID: <img001>
+Content-Disposition: inline; filename="image.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==
+--related--
+
+--outer
+Content-Type: text/plain; charset="UTF-8"; name="notes.txt"
+Content-Disposition: attachment; filename="notes.txt"
+
+These are some notes.
+--outer--

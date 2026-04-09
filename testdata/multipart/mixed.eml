@@ -1,0 +1,41 @@
+From: "Alice Smith" <alice@example.com>
+To: bob@example.com, "Charlie Brown" <charlie@example.com>
+Cc: dave@example.com
+Subject: Email with attachment
+Date: Tue, 15 Feb 2024 09:30:00 +0900
+Message-ID: <mixed123@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary-123"
+
+--mixed-boundary-123
+Content-Type: multipart/alternative; boundary="alt-boundary-456"
+
+--alt-boundary-456
+Content-Type: text/plain; charset="UTF-8"
+
+Hello Bob and Charlie,
+
+Please find the attachment.
+
+Best,
+Alice
+--alt-boundary-456
+Content-Type: text/html; charset="UTF-8"
+
+<html>
+<body>
+<p>Hello Bob and Charlie,</p>
+<p>Please find the attachment.</p>
+<p>Best,<br>Alice</p>
+</body>
+</html>
+--alt-boundary-456--
+
+--mixed-boundary-123
+Content-Type: application/pdf; name="report.pdf"
+Content-Disposition: attachment; filename="report.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5k
+b2JqCg==
+--mixed-boundary-123--

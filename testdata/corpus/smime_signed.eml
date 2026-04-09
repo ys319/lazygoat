@@ -1,0 +1,23 @@
+From: signer@example.com
+To: verifier@example.com
+Subject: Signed Message
+Date: Wed, 17 Apr 2024 10:00:00 +0000
+Message-ID: <smime-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+ micalg=sha-256; boundary="smime-bound-001"
+
+--smime-bound-001
+Content-Type: text/plain; charset="UTF-8"
+
+This message is digitally signed.
+The content is authentic and has not been tampered with.
+
+--smime-bound-001
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0B
+BwGggCSABAAAAKCAMA==
+--smime-bound-001--

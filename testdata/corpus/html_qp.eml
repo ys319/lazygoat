@@ -1,0 +1,18 @@
+From: newsletter@example.com
+To: subscriber@example.com
+Subject: HTML Newsletter - Special Edition
+Date: Thu, 11 Apr 2024 09:00:00 +0000
+Message-ID: <html-qp-001@example.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html>
+<head><title>Newsletter</title></head>
+<body>
+<h1>H=C3=A9llo, World!</h1>
+<p>=C3=9Cber interesting content for our subscribers.</p>
+<p>Visit <a href=3D"https://example.com">our website</a> for more.</p>
+</body>
+</html>

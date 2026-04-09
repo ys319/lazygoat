@@ -1,0 +1,78 @@
+Delivered-To: user@example.com
+Received: by 2002:a05:7000:274e:b0:843:b506:fc26 with SMTP id j14csp259028maq;
+        Wed, 8 Apr 2024 02:36:43 -0700 (PDT)
+X-Received: by 2002:a05:6a00:340a:b0:827:2d7b:5038 with SMTP id d2e1a72fcca58-82d001e9e7amr20472920b3a.5.1712567802819;
+        Wed, 08 Apr 2024 02:36:42 -0700 (PDT)
+Return-Path: <>
+Received: from mail.example.com (mail.example.com. [203.0.113.10])
+        by mx.example.com with ESMTPS id abc123
+        for <user@example.com>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 08 Apr 2024 02:36:42 -0700 (PDT)
+Received-SPF: pass (example.com: domain of postmaster@mail.example.com designates 203.0.113.10 as permitted sender) client-ip=203.0.113.10;
+Authentication-Results: mx.example.com;
+       dkim=pass header.i=@example.com header.s=selector1 header.b=AAAAAAA;
+       spf=pass smtp.helo=mail.example.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=example.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=example.com; s=selector1; t=1712567800;
+        h=to:from:subject:date:message-id:mime-version;
+        bh=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=;
+        b=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on mail.example.com
+X-Spam-Level:
+X-Spam-Status: No, score=-7.6 required=30.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
+MIME-Version: 1.0
+Message-ID: <notification-001@example.com>
+Date: Wed, 08 Apr 2024 09:36:36 +0000
+Subject: =?UTF-8?B?44K144O844OT44K544GL44KJ44Gu44GK55+l44KJ44GbIC0g?=
+	=?UTF-8?B?44OH44O844K/44Ko44Kv44K544Od44O844OI5a6M5LqG?=
+From: "=?UTF-8?B?RXhhbXBsZSDjg4fjg7zjgr/jgqjjgq/jgrnjg53jg7zjg4g=?=" <noreply@example.com>
+To: user@example.com
+Content-Type: multipart/alternative; boundary="000000000000ddb6e5064eefa2e9"
+
+--000000000000ddb6e5064eefa2e9
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Transfer-Encoding: base64
+
+44GK5L2/44GE44Gu44Ki44Kr44Km44Oz44OIIOODh+ODvOOCvw0KMjAyNOW5tDTmnIg45pel44Gr
+44Oq44Kv44Ko44K544OI44GV44KM44Gf44OH44O844K/44Gu44Kz44OU44O844Gu44Ko44Kv44K5
+44Od44O844OI44KS57WC5LqG44GX44G+44GX44Gf44CCDQrjg4njg6njgqTjg5bjgafjg5XjgqHj
+gqTjg6vjga7jgrPjg5Tjg7zjgpLjg4Djgqbjg7Pjg63jg7zjg4njgafjgY3jgb7jgZnjgIINCuS7
+peS4i+OBruODh+ODvOOCv+OBruOCs+ODlOODvOOCkuOCqOOCr+OCueODneODvOODiOOBl+OBvuOB
+l+OBn+OAgg0K44Oh44O844OrDQrjgZPjga7jg6Hjg4Pjgrvjg7zjgrjjga/jgIHmnIDov5Eg44OH
+44O844K/44Ko44Kv44K544Od44O844OIIOOCkuOBlOWIqeeUqOOBhOOBn+OBoOOBhOOBn+ODpuOD
+vOOCtuODvOOBq+OBiumAgeOCiuOBl+OBpuOBhOOBvuOBmeOAgg0K
+--000000000000ddb6e5064eefa2e9
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div align=3D"center" style=3D"width:100%"><div style=3D"border:1px solid =
+#dadce0;border-radius:8px;max-width:650px;padding:20px"><div style=3D"font=
+-size:24px;font-family:sans-serif;margin-bottom:16px">=E3=81=8A=E4=BD=BF=
+=E3=81=84=E3=81=AE=E3=82=A2=E3=82=AB=E3=82=A6=E3=83=B3=E3=83=88 =E3=83=87=
+=E3=83=BC=E3=82=BF</div><div>2024=E5=B9=B44=E6=9C=888=E6=97=A5=E3=81=AB=E3=
+=83=AA=E3=82=AF=E3=82=A8=E3=82=B9=E3=83=88=E3=81=95=E3=82=8C=E3=81=9F=E3=
+=83=87=E3=83=BC=E3=82=BF=E3=81=AE=E3=82=B3=E3=83=94=E3=83=BC=E3=81=AE=E3=
+=82=A8=E3=82=AF=E3=82=B9=E3=83=9D=E3=83=BC=E3=83=88=E3=82=92=E7=B5=82=E4=
+=BA=86=E3=81=97=E3=81=BE=E3=81=97=E3=81=9F=E3=80=82</div><div style=3D"mar=
+gin-top:12px"><a href=3D"https://example.com/export/download" style=3D"bac=
+kground-color:#4184f3;color:#fff;padding:10px 24px;text-decoration:none;bo=
+rder-radius:5px">=E3=83=80=E3=82=A6=E3=83=B3=E3=83=AD=E3=83=BC=E3=83=89</a=
+></div><div style=3D"margin-top:24px;font-size:12px;color:#636363">=E3=81=
+=93=E3=81=AE=E3=83=A1=E3=83=83=E3=82=BB=E3=83=BC=E3=82=B8=E3=81=AF=E3=80=
+=81=E6=9C=80=E8=BF=91 =E3=83=87=E3=83=BC=E3=82=BF=E3=82=A8=E3=82=AF=E3=82=
+=B9=E3=83=9D=E3=83=BC=E3=83=88 =E3=82=92=E3=81=94=E5=88=A9=E7=94=A8=E3=81=
+=84=E3=81=9F=E3=81=A0=E3=81=84=E3=81=9F=E3=83=A6=E3=83=BC=E3=82=B6=E3=83=
+=BC=E3=81=AB=E3=81=8A=E9=80=81=E3=82=8A=E3=81=97=E3=81=A6=E3=81=84=E3=81=
+=BE=E3=81=99=E3=80=82</div><div style=3D"border-top:1px solid #dfdfdf;marg=
+in-top:16px;padding-top:10px;font-size:11px"><a href=3D"https://example.co=
+m/privacy">=E3=83=97=E3=83=A9=E3=82=A4=E3=83=90=E3=82=B7=E3=83=BC =E3=83=
+=9D=E3=83=AA=E3=82=B7=E3=83=BC</a> | <a href=3D"https://example.com/tos">=
+=E5=88=A9=E7=94=A8=E8=A6=8F=E7=B4=84</a></div><img src=3D"https://example.=
+com/logo.png" alt=3D"Example logo" style=3D"width:74px;height:24px"/></div=
+></div>
+--000000000000ddb6e5064eefa2e9--

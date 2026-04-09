@@ -1,0 +1,19 @@
+MIME-Version: 1.0
+Date: Fri, 12 Apr 2024 15:08:31 +0900
+Message-ID: <alt-test-001@example.com>
+Subject: TEST
+From: =?UTF-8?B?55Sw5Lit5LiA6YOO?= <tanaka@example.com>
+To: user@example.com
+Content-Type: multipart/alternative; boundary="000000000000939ef9064dfb54f9"
+
+--000000000000939ef9064dfb54f9
+Content-Type: text/plain; charset="UTF-8"
+
+
+
+--000000000000939ef9064dfb54f9
+Content-Type: text/html; charset="UTF-8"
+
+<div dir="ltr"><br></div>
+
+--000000000000939ef9064dfb54f9--

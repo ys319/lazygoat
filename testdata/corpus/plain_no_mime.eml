@@ -1,0 +1,11 @@
+From: author@example.com
+To: reader@example.com
+Subject: Just a simple note
+Date: Wed, 10 Apr 2024 10:00:00 +0000
+Message-ID: <plain-001@example.com>
+
+This is a simple plain text email without any MIME headers.
+It should be treated as text/plain by default.
+
+Best regards,
+The Author

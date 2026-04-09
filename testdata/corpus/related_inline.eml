@@ -1,0 +1,27 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: HTML Email with Inline Image
+Date: Thu, 18 Apr 2024 11:00:00 +0000
+Message-ID: <related-inline-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary="related-bound-002"
+
+--related-bound-002
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html>
+<html>
+<body>
+<p>Here is our company banner:</p>
+<img src="cid:banner@example.com" alt="Banner"/>
+</body>
+</html>
+--related-bound-002
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-ID: <banner@example.com>
+Content-Disposition: inline; filename="banner.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9
+awAAAABJRU5ErkJggg==
+--related-bound-002--

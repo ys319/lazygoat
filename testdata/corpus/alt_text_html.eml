@@ -1,0 +1,30 @@
+From: "Test Sender" <sender@example.com>
+To: "Test Recipient" <recipient@example.com>
+Subject: Multipart Alternative Test
+Date: Fri, 12 Apr 2024 11:00:00 +0000
+Message-ID: <alt-001@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="alt-bound-001"
+
+--alt-bound-001
+Content-Type: text/plain; charset="UTF-8"
+
+Hello,
+
+This is the plain text version of this email.
+It contains the same information as the HTML version.
+
+Regards,
+Test Sender
+--alt-bound-001
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html>
+<html>
+<body>
+<p>Hello,</p>
+<p>This is the <strong>HTML version</strong> of this email.</p>
+<p>Regards,<br>Test Sender</p>
+</body>
+</html>
+--alt-bound-001--

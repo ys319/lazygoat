@@ -1,0 +1,5 @@
+From: nobody@example.com
+
+This email has only a From header and no other standard headers.
+Content-Type should default to text/plain and parsing should not crash.
+From line in body should not confuse the parser.

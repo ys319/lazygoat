@@ -1,0 +1,10 @@
+From: =?UTF-8?B?5bGx55Sw5aSq6YOO?= <yamada@example.jp>
+To: =?UTF-8?Q?=E4=BD=90=E8=97=A4=E8=8A=B1=E5=AD=90?= <sato@example.jp>
+Subject: =?UTF-8?B?44GK55+l44KJ44Gb?=
+Date: Wed, 20 Mar 2024 15:00:00 +0900
+Message-ID: <encoded-test@example.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-2022-JP"
+Content-Transfer-Encoding: 7bit
+
+This is a test with encoded headers.
