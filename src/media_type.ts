@@ -2,6 +2,8 @@
  * Content-Type / media type parsing (RFC 2045 §5).
  */
 
+import { decodeCharset } from "./codec.ts";
+
 export interface MediaType {
   /** e.g. "text", "multipart" */
   readonly type: string;
@@ -153,12 +155,8 @@ function decodeRfc2231Value(encoded: string, charset: string): string {
     i++;
   }
 
-  const cs = charset.toLowerCase() || "utf-8";
-  try {
-    return new TextDecoder(cs).decode(new Uint8Array(bytes));
-  } catch {
-    return new TextDecoder("utf-8").decode(new Uint8Array(bytes));
-  }
+  const cs = charset || "utf-8";
+  return decodeCharset(new Uint8Array(bytes), cs);
 }
 
 /**

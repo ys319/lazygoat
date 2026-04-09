@@ -9,6 +9,10 @@ import { type MediaType, parseMediaType } from "./media_type.ts";
 const CRLF = "\r\n";
 const LF = "\n";
 
+// Shared encoder/decoder instances (avoid per-call allocation in hot paths)
+const UTF8_DECODER = new TextDecoder("utf-8", { fatal: false });
+const TEXT_ENCODER = new TextEncoder();
+
 /**
  * Represents a single MIME part with lazy evaluation.
  *
@@ -177,7 +181,7 @@ export function splitMultipartBody(
   body: Uint8Array,
   boundary: string,
 ): MimePart[] {
-  const text = new TextDecoder("utf-8", { fatal: false }).decode(body);
+  const text = UTF8_DECODER.decode(body);
   const delimiter = "--" + boundary;
   const closeDelimiter = delimiter + "--";
 
@@ -286,7 +290,7 @@ function parsePartContent(content: string): MimePart | null {
     bodyStr = "";
   }
 
-  const bodyBytes = new TextEncoder().encode(bodyStr);
+  const bodyBytes = TEXT_ENCODER.encode(bodyStr);
   return new MimePart(headerSection, bodyBytes);
 }
 
@@ -336,7 +340,12 @@ function extractParam(headerValue: string, paramName: string): string | null {
       if (endQuote >= 0) {
         return headerValue.slice(valIdx + 1, endQuote).replace(/\\(.)/g, "$1");
       }
-      return headerValue.slice(valIdx + 1);
+      // Unclosed quote: take value up to next semicolon or end of string
+      let endIdx = valIdx + 1;
+      while (endIdx < headerValue.length && headerValue[endIdx] !== ";") {
+        endIdx++;
+      }
+      return headerValue.slice(valIdx + 1, endIdx).trim();
     }
 
     // Token value

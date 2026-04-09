@@ -236,3 +236,22 @@ Deno.test("decodeTransferEncoding - unknown passthrough", () => {
   const input = new TextEncoder().encode("raw data");
   assertEquals(decodeTransferEncoding(input, "unknown"), input);
 });
+
+// ── Base64 edge cases (boundary checks) ──
+
+Deno.test("decodeBase64 - single character (len < 4)", () => {
+  // "=" is a degenerate input; should not crash
+  const result = decodeBase64("=");
+  assertEquals(result.length, 0);
+});
+
+Deno.test("decodeBase64 - two characters '=='", () => {
+  // Both padding, output should be empty or minimal without crash
+  const result = decodeBase64("==");
+  assertEquals(result.length, 0);
+});
+
+Deno.test("decodeBase64 - whitespace only", () => {
+  const result = decodeBase64("  \r\n\t  ");
+  assertEquals(result.length, 0);
+});

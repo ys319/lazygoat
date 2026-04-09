@@ -12,7 +12,7 @@ import { parseMbox, parseMboxStream } from "./src/mbox.ts";
 
 const simpleText = await Deno.readTextFile("testdata/basic/simple_text.eml");
 const altEml = await Deno.readTextFile("testdata/multipart/alternative.eml");
-const complexEml = await Deno.readTextFile("testdata/multipart/multipart/complex_b64_qp.eml");
+const complexEml = await Deno.readTextFile("testdata/multipart/complex_b64_qp.eml");
 const multipartMixed = await Deno.readTextFile("testdata/multipart/mixed.eml");
 const nestedMultipart = await Deno.readTextFile(
   "testdata/multipart/nested.eml",

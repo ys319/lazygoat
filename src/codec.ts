@@ -28,9 +28,10 @@ export function decodeBase64(input: string): Uint8Array {
 
   // Calculate output size accounting for padding
   let padding = 0;
-  if (clean[len - 1] === "=") padding++;
-  if (clean[len - 2] === "=") padding++;
+  if (len >= 1 && clean[len - 1] === "=") padding++;
+  if (len >= 2 && clean[len - 2] === "=") padding++;
   const outLen = ((len * 3) >>> 2) - padding;
+  if (outLen <= 0) return new Uint8Array(0);
 
   const out = new Uint8Array(outLen);
   let j = 0;
@@ -136,6 +137,9 @@ function decodeQEncoding(input: string): Uint8Array {
   return new Uint8Array(out);
 }
 
+// Shared decoder for ASCII (used in transfer-encoding hot paths)
+const ASCII_DECODER = new TextDecoder("ascii");
+
 // Cache TextDecoder instances per charset
 const decoderCache = new Map<string, TextDecoder>();
 
@@ -163,6 +167,9 @@ export function decodeCharset(data: Uint8Array, charset: string): string {
  */
 function normalizeCharset(charset: string): string {
   const lower = charset.toLowerCase().trim();
+  // Map us-ascii/iso-8859-1 to windows-1252 per WHATWG Encoding Standard.
+  // Many email clients declare us-ascii but include high-byte characters;
+  // windows-1252 is a superset that handles these gracefully.
   const aliases: Record<string, string> = {
     "us-ascii": "windows-1252",
     "ascii": "windows-1252",
@@ -240,12 +247,11 @@ export function decodeTransferEncoding(
 ): Uint8Array {
   switch (encoding.toLowerCase().trim()) {
     case "base64": {
-      // Convert bytes to ASCII string for base64 decoding
-      const str = new TextDecoder("ascii").decode(data);
+      const str = ASCII_DECODER.decode(data);
       return decodeBase64(str);
     }
     case "quoted-printable": {
-      const str = new TextDecoder("ascii").decode(data);
+      const str = ASCII_DECODER.decode(data);
       return decodeQuotedPrintable(str);
     }
     case "7bit":

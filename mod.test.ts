@@ -1,5 +1,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { parse } from "./mod.ts";
+import { MimePart } from "./src/part.ts";
 
 // ── Helper ──
 
@@ -404,4 +405,20 @@ Deno.test("edge case - content type access", async () => {
   assertEquals(msg.contentType.type, "multipart");
   assertEquals(msg.contentType.subtype, "alternative");
   assertExists(msg.contentType.params.get("boundary"));
+});
+
+// ── Unclosed quote in Content-Disposition filename ──
+
+Deno.test("edge case - unclosed quote in Content-Disposition filename", () => {
+  const headers = `Content-Type: application/octet-stream\r\nContent-Disposition: attachment; filename="broken`;
+  const body = new TextEncoder().encode("data");
+  const part = new MimePart(headers, body);
+  assertEquals(part.filename, "broken");
+});
+
+Deno.test("edge case - unclosed quote with semicolon after", () => {
+  const headers = `Content-Type: application/octet-stream\r\nContent-Disposition: attachment; filename="broken; other=val`;
+  const body = new TextEncoder().encode("data");
+  const part = new MimePart(headers, body);
+  assertEquals(part.filename, "broken");
 });
