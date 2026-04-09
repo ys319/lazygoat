@@ -1,0 +1,45 @@
+name: publish
+
+on:
+  release:
+    types:
+      - published
+
+# トップレベルで全権限を落とし、job単位で最小権限を付与
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write # JSR OIDC provenance publishing
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Clone repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
+        with:
+          deno-version: v2.x
+
+      - name: Format
+        run: deno fmt --check
+
+      - name: Type check
+        run: deno check mod.ts
+
+      - name: Test
+        run: deno task test
+
+      - name: Publish to JSR
+        run: deno publish
